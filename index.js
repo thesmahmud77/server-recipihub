@@ -24,11 +24,26 @@ async function run() {
     // Connect the client to the server (optional starting in v4.7)
     await client.connect();
     const db = client.db("RecipeHub");
-    const recipeCollection = db.collection("recipe");
     const featuredCollection = db.collection("featured");
+    const recipesCollection = db.collection("recipes");
 
     app.get("/featured", async (req, res) => {
       const cursor = featuredCollection.find().sort({ updatedAt: -1 }).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // app.get("/recipes-category", async (req, res) => {
+    //   try {
+    //     const recipeCategories = await recipesCollection.distinct("category");
+    //     res.send(recipeCategories);
+    //   } catch (error) {
+    //     console.error("Failed to fetch recipe categories:", error);
+    //     res.status(500).send({ error: "Failed to fetch recipe categories" });
+    //   }
+    // });
+    app.get("/recipes", async (req, res) => {
+      const cursor = recipesCollection.find().sort({ createdAt: -1 });
       const result = await cursor.toArray();
       res.send(result);
     });
