@@ -24,10 +24,11 @@ async function run() {
     // Connect the client to the server (optional starting in v4.7)
     await client.connect();
     const db = client.db("RecipeHub");
-    const RecipeCollection = db.collection("Recipe");
+    const recipeCollection = db.collection("recipe");
+    const featuredCollection = db.collection("featured");
 
-    app.get("/recipes", async (req, res) => {
-      const cursor = RecipeCollection.find();
+    app.get("/featured", async (req, res) => {
+      const cursor = featuredCollection.find().sort({ updatedAt: -1 }).limit(6);
       const result = await cursor.toArray();
       res.send(result);
     });
