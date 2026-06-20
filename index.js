@@ -48,6 +48,11 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    app.get("/all-recipes", async (req, res) => {
+      const cursor = recipesCollection.find().sort({ createdAt: -1 });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     app.get("/recipes/:id", async (req, res) => {
       try {
