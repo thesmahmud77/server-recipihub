@@ -22,6 +22,7 @@ const client = new MongoClient(uri, {
 const db = client.db("RecipeHub");
 const featuredCollection = db.collection("featured");
 const recipesCollection = db.collection("recipes");
+const userCollection = db.collection("user");
 
 async function run() {
   try {
@@ -49,7 +50,7 @@ async function run() {
       res.send(result);
     });
     app.get("/all-recipes", async (req, res) => {
-      const cursor = recipesCollection.find().sort({ createdAt: -1 });
+      const cursor = recipesCollection.find().sort({ createdAt: 1 });
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -102,6 +103,17 @@ async function run() {
       const newRecipe = req.body;
       const result = await recipesCollection.insertOne(newRecipe);
       // console.log(result);
+      res.send(result);
+    });
+
+    // Admin API
+    // Admin API
+    // Admin API
+    // Admin API
+
+    app.get("/user", async (req, res) => {
+      const cursor = userCollection.find().sort({ updatedAt: -1 });
+      const result = await cursor.toArray();
       res.send(result);
     });
 
