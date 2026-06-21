@@ -80,6 +80,31 @@ async function run() {
       }
     });
 
+    // My Recipe Data base on Login email
+    app.get("/my-recipes", async (req, res) => {
+      try {
+        const userEmail = req.query.email;
+
+        if (!userEmail) {
+          return res.status(400).send({ message: "Email Not Found" });
+        }
+
+        const query = { authorEmail: userEmail };
+        const result = await recipesCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Internal Server Error", error });
+      }
+    });
+
+    // Add Recipe Post API
+    app.post("/add-recipe", async (req, res) => {
+      const newRecipe = req.body;
+      const result = await recipesCollection.insertOne(newRecipe);
+      // console.log(result);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
