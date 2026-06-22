@@ -23,6 +23,8 @@ const db = client.db("RecipeHub");
 const featuredCollection = db.collection("featured");
 const recipesCollection = db.collection("recipes");
 const userCollection = db.collection("user");
+const favRecipeCollection = db.collection("favorites-recipe");
+const recipeReportsCollection = db.collection("recipe-reports");
 
 async function run() {
   try {
@@ -102,6 +104,56 @@ async function run() {
     app.post("/add-recipe", async (req, res) => {
       const newRecipe = req.body;
       const result = await recipesCollection.insertOne(newRecipe);
+      // console.log(result);
+      res.send(result);
+    });
+
+    // Fav Recipe post API
+    app.post("/favorite-recipes", async (req, res) => {
+      const favRecipe = req.body;
+      const { recipeId } = favRecipe;
+
+      const existingFav = await favRecipeCollection.findOne({ recipeId });
+
+      if (existingFav) {
+        return res.status(409).send({
+          message: "Already Added",
+        });
+      }
+
+      const result = await favRecipeCollection.insertOne(favRecipe);
+      res.send({ message: "Added Successfully", result });
+    });
+
+    app.get("/favorite-recipes", async (req, res) => {
+      try {
+        const userEmail = req.query.email;
+
+        if (!userEmail) {
+          return res.status(400).send({ message: "Email Not Found" });
+        }
+
+        const query = { favEmail: userEmail };
+        const result = await favRecipeCollection
+          .find(query)
+          .sort({
+            savedAt: -1,
+          })
+          .limit(9)
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Internal Server Error", error });
+      }
+    });
+
+    // Report Recipe
+    // Report Recipe
+
+    // Add Recipe Post API
+    app.post("/report-recipe", async (req, res) => {
+      const reportRecipe = req.body;
+      const result = await recipeReportsCollection.insertOne(reportRecipe);
       // console.log(result);
       res.send(result);
     });
