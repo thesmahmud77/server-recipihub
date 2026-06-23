@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -167,6 +167,82 @@ async function run() {
       const cursor = userCollection.find().sort({ updatedAt: -1 });
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+    app.get("/recipe-reports", async (req, res) => {
+      const cursor = recipeReportsCollection.find().sort({ reportedAt: 1 });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // ওয়ান-ক্লিকে রিপোর্টের _id দিয়ে ডাটাবেজ থেকে ডিলিট করার API
+    app.delete("/recipe-reports/:id", async (req, res) => {
+      try {
+        const id = req.params.id; // ফ্রন্টএন্ড থেকে পাঠানো রিপোর্টের _id
+        const query = { _id: new ObjectId(id) };
+
+        const result = await reportsCollection.deleteOne(query);
+
+        if (result.deletedCount > 0) {
+          res.send({ success: true, message: "Report deleted successfully" });
+        } else {
+          res.status(404).send({ success: false, message: "Report not found" });
+        }
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error", error });
+      }
+    });
+
+    // Delete Admin Reports
+    app.delete("/reports-delete/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await reportsCollection.deleteOne(query);
+        if (result.deletedCount > 0) {
+          res.send({ success: true, message: "Report deleted successfully!" });
+        } else {
+          res
+            .status(404)
+            .send({ success: false, message: "Report not found!" });
+        }
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error" });
+      }
+    });
+
+    //
+
+    // ডাটা আপডেট করার জন্য PATCH API
+    app.patch("/recipe-reports-update/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedData = req.body;
+
+        const filter = { _id: new ObjectId(id) };
+
+        const updateDoc = {
+          $set: {
+            status: updatedData.status,
+          },
+        };
+
+        const result = await reportsCollection.updateOne(filter, updateDoc);
+
+        if (result.modifiedCount > 0) {
+          res.send({ success: true, message: "Status updated successfully!" });
+        } else {
+          res.send({ success: false, message: "No changes were made." });
+        }
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error" });
+      }
     });
 
     // Send a ping to confirm a successful connection
