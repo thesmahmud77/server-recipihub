@@ -176,18 +176,14 @@ async function run() {
     });
 
     // ওয়ান-ক্লিকে রিপোর্টের _id দিয়ে ডাটাবেজ থেকে ডিলিট করার API
-    app.delete("/recipe-reports/:id", async (req, res) => {
+    app.delete("/all-recipes/:id", async (req, res) => {
       try {
-        const id = req.params.id; // ফ্রন্টএন্ড থেকে পাঠানো রিপোর্টের _id
+        const id = req.params.id;
         const query = { _id: new ObjectId(id) };
 
-        const result = await reportsCollection.deleteOne(query);
+        const result = await recipesCollection.deleteOne(query);
 
-        if (result.deletedCount > 0) {
-          res.send({ success: true, message: "Report deleted successfully" });
-        } else {
-          res.status(404).send({ success: false, message: "Report not found" });
-        }
+        res.send(result);
       } catch (error) {
         res
           .status(500)
