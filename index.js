@@ -192,28 +192,89 @@ async function run() {
     });
 
     // Delete Admin Reports
-    app.delete("/reports-delete/:id", async (req, res) => {
+    // Delete Admin Reports
+    app.delete("/report-delete-from-admin/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
-        const result = await reportsCollection.deleteOne(query);
-        if (result.deletedCount > 0) {
-          res.send({ success: true, message: "Report deleted successfully!" });
+
+        const result = await recipeReportsCollection.deleteOne(query);
+
+        if (result.deletedCount === 1) {
+          res.send({
+            success: true,
+            message: "Report has been deleted successfully.",
+          });
         } else {
-          res
-            .status(404)
-            .send({ success: false, message: "Report not found!" });
+          res.status(44).send({ success: false, message: "Report not found." });
         }
       } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error", error });
+      }
+    });
+
+    app.delete("/recipe-delete-from-own-email/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await recipesCollection.deleteOne(query);
+
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error", error });
+      }
+    });
+
+    app.delete("/remove-to-fav/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await favRecipeCollection.deleteOne(query);
+
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error", error });
+      }
+    });
+
+    app.patch("/user/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { status } = req.body;
+
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            status: status,
+          },
+        };
+
+        const result = await userCollection.updateOne(filter, updatedDoc);
+
+        if (result.modifiedCount > 0 || result.matchedCount > 0) {
+          res.send({
+            success: true,
+            message: `User status updated to ${status}`,
+          });
+        } else {
+          res.status(404).send({ success: false, message: "User not found" });
+        }
+      } catch (error) {
+        console.error("Status update error:", error);
         res
           .status(500)
           .send({ success: false, message: "Internal Server Error" });
       }
     });
 
-    //
-
-    // ডাটা আপডেট করার জন্য PATCH API
     app.patch("/recipe-reports-update/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -241,7 +302,50 @@ async function run() {
       }
     });
 
-    // Send a ping to confirm a successful connection
+    app.get("/featured-recipes", async (req, res) => {
+      try {
+        const query = { isFeatured: true };
+
+        const result = await recipeCollection.find(query).toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching featured recipes:", error);
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error" });
+      }
+    });
+    app.patch("/all-recipes/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { isFeatured } = req.body;
+
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            isFeatured: isFeatured,
+          },
+        };
+
+        const result = await recipeCollection.updateOne(filter, updatedDoc);
+
+        if (result.modifiedCount > 0 || result.matchedCount > 0) {
+          res.send({
+            success: true,
+            message: "Recipe status updated successfully",
+          });
+        } else {
+          res.status(404).send({ success: false, message: "Recipe not found" });
+        }
+      } catch (error) {
+        console.error("Feature update error:", error);
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error" });
+      }
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
