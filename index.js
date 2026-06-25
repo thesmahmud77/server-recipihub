@@ -159,6 +159,27 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/add-featured-recipes", async (req, res) => {
+      const cursor = addFeaturedRecipeCollection.find().sort({ updatedAt: -1 });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.delete("/delete-user/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await userCollection.deleteOne(query);
+
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error", error });
+      }
+    });
+
     // Admin API
     // Admin API
     // Admin API
