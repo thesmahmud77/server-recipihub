@@ -25,6 +25,7 @@ const recipesCollection = db.collection("recipes");
 const userCollection = db.collection("user");
 const favRecipeCollection = db.collection("favorites-recipe");
 const recipeReportsCollection = db.collection("recipe-reports");
+const addFeaturedRecipeCollection = db.collection("feature-added-recipes");
 
 async function run() {
   try {
@@ -175,7 +176,6 @@ async function run() {
       res.send(result);
     });
 
-    // ওয়ান-ক্লিকে রিপোর্টের _id দিয়ে ডাটাবেজ থেকে ডিলিট করার API
     app.delete("/all-recipes/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -193,6 +193,36 @@ async function run() {
 
     // Delete Admin Reports
     // Delete Admin Reports
+
+    app.post("/add-featured-recipes", async (req, res) => {
+      try {
+        const featuredRecipe = req.body;
+
+        const originalRecipeId = featuredRecipe.originalId;
+
+        const existingFeatured = await addFeaturedRecipeCollection.findOne({
+          originalId: originalRecipeId,
+        });
+
+        if (existingFeatured) {
+          return res.status(200).send({
+            success: false,
+            isDuplicate: true,
+            message: "This recipe is already added to the featured list!",
+          });
+        }
+
+        delete featuredRecipe._id;
+
+        const result =
+          await addFeaturedRecipeCollection.insertOne(featuredRecipe);
+        res.send({ success: true, insertedId: result.insertedId });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ success: false, message: "Server Error" });
+      }
+    });
+
     app.delete("/report-delete-from-admin/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -346,6 +376,37 @@ async function run() {
       }
     });
 
+    // ১. রেসিপির isFeatured টগল করার রাউট (PATCH)
+    app.patch("/all-recipes/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { isFeatured } = req.body; // ফ্রন্টঅ্যান্ড থেকে true অথবা false আসবে
+
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            isFeatured: isFeatured, // মঙ্গোডিতে 'isFeatured' ফিল্ড আপডেট হবে
+          },
+        };
+
+        // ✅ ফিক্সড: কালেকশনের নাম recipesCollection করা হয়েছে
+        const result = await recipesCollection.updateOne(filter, updatedDoc);
+
+        if (result.modifiedCount > 0 || result.matchedCount > 0) {
+          res.send({
+            success: true,
+            message: "Recipe status updated successfully",
+          });
+        } else {
+          res.status(404).send({ success: false, message: "Recipe not found" });
+        }
+      } catch (error) {
+        console.error("Feature update error:", error);
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error" });
+      }
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
