@@ -199,6 +199,48 @@ app.delete("/delete-user/:id", async (req, res) => {
   }
 });
 
+// Update user Info
+app.patch("/update-user", async (req, res) => {
+  try {
+    const { email, name, image } = req.body;
+
+    if (!email) {
+      return res.status(400).send({
+        success: false,
+        message: "Email is required to update profile",
+      });
+    }
+
+    const filter = { email: email };
+
+    // মঙ্গোডিবির $set শুধুমাত্র পাঠানো ফিল্ডগুলোকেই আংশিক আপডেট (PATCH) করবে
+    const updateDoc = {
+      $set: {
+        name: name,
+        image: image,
+        updatedAt: new Date(),
+      },
+    };
+
+    const result = await userCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res
+        .status(404)
+        .send({ success: false, message: "User not found" });
+    }
+
+    res.send({
+      success: true,
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ success: false, message: "Internal Server Error" });
+  }
+});
+
 // Admin API
 // Admin API
 // Admin API
