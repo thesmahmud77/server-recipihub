@@ -478,6 +478,34 @@ app.patch("/all-recipes/:id", async (req, res) => {
   }
 });
 
+// user Block and Unblock API
+app.patch("/user-block-toggle/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { status } = req.body;
+
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = {
+      $set: {
+        status: status,
+      },
+    };
+
+    const result = await userCollection.updateOne(filter, updateDoc);
+
+    if (result.modifiedCount > 0) {
+      res.send({ success: true, message: `User status updated to ${status}` });
+    } else {
+      res
+        .status(400)
+        .send({ success: false, message: "No changes made to user status" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ success: false, message: "Internal Server Error" });
+  }
+});
+
 //     // await client.db("admin").command({ ping: 1 });
 //     console.log(
 //       "Pinged your deployment. You successfully connected to MongoDB!",
