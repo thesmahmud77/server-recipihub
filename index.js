@@ -213,7 +213,6 @@ app.patch("/update-user", async (req, res) => {
 
     const filter = { email: email };
 
-    // মঙ্গোডিবির $set শুধুমাত্র পাঠানো ফিল্ডগুলোকেই আংশিক আপডেট (PATCH) করবে
     const updateDoc = {
       $set: {
         name: name,
@@ -222,7 +221,7 @@ app.patch("/update-user", async (req, res) => {
       },
     };
 
-    const result = await userCollection.updateOne(filter, updateDoc);
+    const result = await userCollectiosn.updateOne(filter, updateDoc);
 
     if (result.matchedCount === 0) {
       return res
